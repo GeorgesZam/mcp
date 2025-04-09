@@ -1,22 +1,33 @@
-import ollama
-import json
+import streamlit as st
+import spacy
 
-# Initialisation du client Ollama avec le modèle de langage local
-client = ollama.Client(model="nom_du_modele")
+# Titre et description de l'application
+st.title("Analyse de texte avec spaCy")
+st.write("Entrez un texte en français pour extraire et visualiser les entités nommées.")
 
-# Fonction pour interagir avec le serveur MCP
-def interagir_avec_mcp(outil, arguments):
-    # Création de la requête MCP
-    requete = {
-        "tool": outil,
-        "arguments": arguments
-    }
-    # Envoi de la requête au serveur MCP
-    reponse = client.call_tool(json.dumps(requete))
-    return reponse
+# Zone de texte pour l'entrée
+text = st.text_area("Votre texte :", "Entrez ici votre texte en français...")
 
-# Exemple d'utilisation
-if __name__ == "__main__":
-    # Appel de l'outil 'obtenir_heure_actuelle' sans arguments
-    resultat = interagir_avec_mcp("obtenir_heure_actuelle", {})
-    print(resultat)
+# Bouton pour lancer l'analyse
+if st.button("Analyser"):
+    if text:
+        try:
+            # Charger le modèle spaCy en français 
+            # (Assure-toi d'avoir installé le modèle en ligne de commande : python -m spacy download fr_core_news_md)
+            nlp = spacy.load("fr_core_news_md")
+            doc = nlp(text)
+            
+            # Extraction des entités nommées
+            entities = [(ent.text, ent.label_) for ent in doc.ents]
+            
+            st.success("Analyse effectuée avec succès !")
+            if entities:
+                st.subheader("Entités nommées extraites :")
+                # Afficher dans un tableau
+                st.table(entities)
+            else:
+                st.info("Aucune entité nommée détectée.")
+        except Exception as e:
+            st.error(f"Une erreur s'est produite : {e}")
+    else:
+        st.warning("Veuillez entrer un texte à analyser.")
